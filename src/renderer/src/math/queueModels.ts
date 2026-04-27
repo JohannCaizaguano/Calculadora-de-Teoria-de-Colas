@@ -37,7 +37,7 @@ export function calcPICS(lambda: number, mu: number): QueueMetrics | null {
   const L = rho / (1 - rho)
   const Wq = Lq / lambda
   const W = L / lambda
-  const Ln = L // For M/M/1, Ln = 1 / (1 - rho)
+  const Ln = 1 / (1 - rho)
   const Pk = rho // P(system busy)
   const Pne = P0 // P(no wait) = P(system empty)
   const Wn = Pk > 0 ? Wq / Pk : 0
@@ -50,7 +50,7 @@ export function calcPICS(lambda: number, mu: number): QueueMetrics | null {
     Pne: round(Pne),
     L: round(L),
     Lq: round(Lq),
-    Ln: round(1 / (1 - rho)),
+    Ln: round(Ln),
     W: round(W),
     Wq: round(Wq),
     Wn: round(Wn),
@@ -444,4 +444,67 @@ export function generateCostOptimizationData(
   }
 
   return data
+}
+
+// ----------------------------------------------------------
+// Probability Query: compute all variants for a given n
+// ----------------------------------------------------------
+export interface ProbabilityQueryResult {
+  Pn_exact: number     // P(n = N)
+  Pn_at_most: number   // P(n ≤ N)
+  Pn_at_least: number  // P(n ≥ N)
+  Pn_more_than: number // P(n > N)
+  n: number            // The actual n used (after clamping)
+}
+
+export function computeAllProbabilities(
+  model: 'PICS' | 'PICM' | 'PFCS' | 'PFCM',
+  lambda: number,
+  mu: number,
+  k: number,
+  M: number,
+  N: number
+): ProbabilityQueryResult | null {
+  if (lambda <= 0 || mu <= 0) return null
+
+  // Stability check for infinite-population models
+  if (model === 'PICS' && lambda / mu >= 1) return null
+  if (model === 'PICM' && lambda / (k * mu) >= 1) return null
+
+  // Clamp N for finite-population models
+  const effectiveN = (model === 'PFCS' || model === 'PFCM') ? Math.min(N, M) : N
+
+  // Generate Pn array from 0..effectiveN using the existing function
+  const probabilities = generateProbabilities(model, lambda, mu, k, M, effectiveN)
+  if (probabilities.length === 0) return null
+
+  // P(n = N)
+  const Pn_exact = effectiveN < probabilities.length
+    ? probabilities[effectiveN].Pn
+    : 0
+
+  // P(n ≤ N) = Σ P(i) for i = 0..N
+  let sumUpToN = 0
+  for (let i = 0; i <= effectiveN && i < probabilities.length; i++) {
+    sumUpToN += probabilities[i].Pn
+  }
+  const Pn_at_most = sumUpToN
+
+  // P(n ≥ N) = 1 - Σ P(i) for i = 0..N-1
+  let sumUpToNMinus1 = 0
+  for (let i = 0; i < effectiveN && i < probabilities.length; i++) {
+    sumUpToNMinus1 += probabilities[i].Pn
+  }
+  const Pn_at_least = Math.max(0, 1 - sumUpToNMinus1)
+
+  // P(n > N) = 1 - Σ P(i) for i = 0..N
+  const Pn_more_than = Math.max(0, 1 - sumUpToN)
+
+  return {
+    Pn_exact: round(Pn_exact),
+    Pn_at_most: round(Pn_at_most),
+    Pn_at_least: round(Pn_at_least),
+    Pn_more_than: round(Pn_more_than),
+    n: effectiveN,
+  }
 }

@@ -82,6 +82,13 @@ export const translations = {
     PICM_desc: 'Población Infinita, Cola Sin límite, k Servidores',
     PFCS_desc: 'Población Finita, Cola Sin límite, 1 Servidor',
     PFCM_desc: 'Población Finita, Cola Sin límite, k Servidores',
+    // Probability Query
+    probQueryTitle: 'Consulta de Probabilidades',
+    probQueryDesc: 'Probabilidades calculadas para n =',
+    probExact: 'P(n = {n}) — Exactamente {n}',
+    probAtMost: 'P(n ≤ {n}) — Máximo {n}',
+    probAtLeast: 'P(n ≥ {n}) — Al menos {n}',
+    probMoreThan: 'P(n > {n}) — Más de {n}',
   },
   en: {
     // Sidebar
@@ -164,5 +171,12 @@ export const translations = {
     PICM_desc: 'Infinite Population, Infinite Queue, k Servers',
     PFCS_desc: 'Finite Population, Infinite Queue, 1 Server',
     PFCM_desc: 'Finite Population, Infinite Queue, k Servers',
+    // Probability Query
+    probQueryTitle: 'Probability Query',
+    probQueryDesc: 'Probabilities computed for n =',
+    probExact: 'P(n = {n}) — Exactly {n}',
+    probAtMost: 'P(n ≤ {n}) — At most {n}',
+    probAtLeast: 'P(n ≥ {n}) — At least {n}',
+    probMoreThan: 'P(n > {n}) — More than {n}',
   }
 }

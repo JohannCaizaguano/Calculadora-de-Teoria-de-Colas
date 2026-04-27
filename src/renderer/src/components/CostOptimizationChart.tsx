@@ -83,17 +83,26 @@ export function CostOptimizationChart(): React.JSX.Element {
                   borderRadius: '8px',
                   fontSize: 12,
                 }}
-                formatter={(value: number, name: string) => {
+                formatter={(value, name) => {
                   const labels: Record<string, string> = {
                     CT_TE: t.costWaitSys,
                     CT_S: t.costServersAmount,
                     CT: t.costTotalLabel,
                   }
-                  return [`$${value.toFixed(2)}`, labels[name] || name]
+                  const numericValue = typeof value === 'number' ? value : Number(value)
+                  const formattedValue = Number.isFinite(numericValue)
+                    ? `$${numericValue.toFixed(2)}`
+                    : String(value ?? '')
+                  const nameKey = typeof name === 'string' ? name : String(name ?? '')
+
+                  return [formattedValue, labels[nameKey] || nameKey]
                 }}
-                labelFormatter={(label: number) =>
-                  isMultiServer ? `k = ${label}` : `μ = ${label}`
-                }
+                labelFormatter={(label) => {
+                  const labelValue = typeof label === 'number' || typeof label === 'string'
+                    ? label
+                    : ''
+                  return isMultiServer ? `k = ${labelValue}` : `μ = ${labelValue}`
+                }}
               />
               <Legend
                 wrapperStyle={{ fontSize: 11, paddingTop: 10 }}

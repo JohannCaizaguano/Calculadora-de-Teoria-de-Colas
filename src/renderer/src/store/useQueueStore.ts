@@ -2,6 +2,7 @@ import { create } from 'zustand'
 import {
   type QueueMetrics,
   type CostDataPoint,
+  type ProbabilityQueryResult,
   calcPICS,
   calcPICM,
   calcPFCS,
@@ -9,6 +10,7 @@ import {
   generateWqVsMuData,
   generateProbabilities,
   generateCostOptimizationData,
+  computeAllProbabilities,
 } from '@renderer/math/queueModels'
 
 export type ModelType = 'PICS' | 'PICM' | 'PFCS' | 'PFCM'
@@ -56,6 +58,7 @@ interface QueueState {
 
   // Computed arrays
   probabilities: Array<{ n: number; Pn: number }>
+  probQueryResult: ProbabilityQueryResult | null
   costData: CostDataPoint[]
   CT: number | null
 
@@ -96,11 +99,12 @@ export const useQueueStore = create<QueueState>((set, get) => ({
   isCalculating: false,
   chartData: [],
   probabilities: [],
+  probQueryResult: null,
   costData: [],
   CT: null,
 
   setLanguage: (lang) => set({ language: lang }),
-  setModel: (model) => set({ selectedModel: model, metrics: null, chartData: [], probabilities: [], costData: [], CT: null }),
+  setModel: (model) => set({ selectedModel: model, metrics: null, chartData: [], probabilities: [], probQueryResult: null, costData: [], CT: null }),
   setLambda: (val) => set({ lambda: val }),
   setMu: (val) => set({ mu: val }),
   setK: (val) => set({ k: val }),
@@ -128,6 +132,7 @@ export const useQueueStore = create<QueueState>((set, get) => ({
     isCalculating: false,
     chartData: [],
     probabilities: [],
+    probQueryResult: null,
     costData: [],
     CT: null,
   }),
@@ -200,12 +205,16 @@ export const useQueueStore = create<QueueState>((set, get) => ({
         CT = Math.round((ct_te_total + cts) * 100) / 100
       }
 
+      // Compute probability query variants for N
+      const probQueryResult = computeAllProbabilities(selectedModel, lambda, mu, k, M, N)
+
       set({
         metrics: result,
         isStable: result !== null,
         isCalculating: false,
         chartData,
         probabilities,
+        probQueryResult,
         costData,
         CT,
       })
